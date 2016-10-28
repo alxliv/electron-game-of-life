@@ -9,7 +9,7 @@ desktop apps using Electron/HTML5/CSS/NodeJS/Javascript.
 <img src='gof-demo.png' width='600px' />
 
 ## Motivation
-I wrote this as an exercise.
+I wrote this as an exercise inspired by an excellent tutorial by Lea Verou [Play by Play](https://www.pluralsight.com/courses/play-by-play-lea-verou).
 
 ## Features
 - Auto-run or step-by-step
