@@ -8,13 +8,10 @@
 
 </head>
 <body>
-  <h1>Playing with HTML5/CSS</h1>
   <blockquote cite="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">
     The Game of Life, also known simply as Life, is a cellular automaton devised by the British mathematician John Horton Conway in 1970.
     <cite><a title="wikipedia article" href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">-Wikipedia</a></cite>
   </blockquote>
-
-  <br>
   <hr>
   <div class="left">
     <button class="btn" id="savebtn">Save to..</button>
@@ -24,8 +21,6 @@
   <div id="wrapper">
     <br>
     <div id="gridsetup">  
-      <span id="grid_err_msg">Hidden Message</span>  
-      <br>  
       <label for="grid_size">Grid width:</label>
       <input id="grid_size" type="number" min="6" max="100" step="1" value ="24"/>
       <button class="xbutton" id="runbtn">Run</button>
@@ -44,21 +39,18 @@
     <div class="warning">Warning message!</div>
     <table id="grid"></table>
     <br>
+    <address>About this program: <a href="https://github.com/alxliv/electron-game-of-life">GitHub</a></address>    
   </div>
-
+  
   <script>
     console.log("Here is index.html")
     console.log("Chrome version:",process.versions.chrome);
     console.log("Electron version:",process.versions.electron)
 
-    //open links externally by default
-    require('./scripts/ex-links.js')   
-    require('./scripts/game_of_life.js')
-    
-/*   
-    require('./scripts/life_game.js')
-    require('./scripts/life_view.js')    
-*/    
+    // open links externally by default
+    require('./scripts/ex-links.js')  
+    // actual game code
+    require('./scripts/game_of_life.js')    
   </script>
 
 </body>

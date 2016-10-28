@@ -2,8 +2,6 @@
 	padding: 0;
 	margin: 0;
 }
-
-
 body {
 	text-align: center;
 	font-family: sans-serif;	
@@ -132,31 +130,10 @@ blockquote p {
   display: inline;
 }
 
-blockquote.style2 {
-/*    display: block; */
-	font: 18px/22px normal helvetica, sans-serif; 
-	background-color: lightblue;	
-    margin-top: 1em;
-    margin-bottom: 1em;
-    margin-left: 2em;
-    margin-right: 10px;
-}
-
 h1 {
 	margin: .5cm 0 1em;
 }
 
-
-
-span#grid_err_msg {
-	visibility: hidden;
-	color: red;
-	background-color: yellow;	
-	font-size: .8em;
-	padding: 6px;
-	font-style: italic;
-	font-weight: bold;
-}
 
 #grid {
 	margin: 1em auto 0;
@@ -168,29 +145,6 @@ span#grid_err_msg {
 		border: 1px solid grey;
 	}
 
-/*
-	@-webkit-keyframes birth {
-		50% {
-			box-shadow: 0 0 0 99px green inset;
-		}
-	}
-	
-	@keyframes birth {
-		50% {
-			box-shadow: 0 0 0 99px green inset;
-		}
-	}
-*/
-
-/*
-	@-webkit-keyframes death {
-		0% { box-shadow: 0 0 0 99px black inset; }
-		25% { box-shadow: 0 0 0 99px goldenrod inset; }
-		50% { box-shadow: 0 0 0 99px orange inset; }
-		75% { box-shadow: 0 0 0 99px yellow inset; }
-		100% { box-shadow: 0 0 0 99px lightgoldenrodyellow inset; }
-	}
-*/
 
 	@-webkit-keyframes birth {
 		0% { box-shadow: 0 0 0 99px snow inset; }
@@ -198,12 +152,6 @@ span#grid_err_msg {
 		100% { box-shadow: 0 0 0 99px black inset; }
 
 	}
-/*
-	@-webkit-keyframes birth {
-		0% { box-shadow: 0 0 0 99px snow inset; }
-		100% { box-shadow: 0 0 0 99px green inset; }
-	}
-*/
 
 	@-webkit-keyframes death {
 		0% { box-shadow: 0 0 0 99px black inset; } 
@@ -216,7 +164,6 @@ span#grid_err_msg {
 		width: 25px;
 		height: 25px;
 		border: 0;
-/*		-webkit-animation: death 200ms;	*/
 		background: white;
 	}
 
@@ -254,11 +201,6 @@ button:disabled {
 	cursor: not-allowed;
 }
 
-#autoplay {
-	position: absolute;
-	clip: rect(0,0,0,0);
-}
-
 .info, .success, .warning, .error, .validation {
 border: 1px solid;
 display: inline-block;
@@ -272,20 +214,20 @@ background-position: 10px center;
 .info {
 color: #00529B;
 background-color: #BDE5F8;
-background-image: url('../assets/info.png');
+background-image: url('./assets/info.png');
 }
 .success {
 color: #4F8A10;
 background-color: #DFF2BF;
-background-image:url('../assets/success.png');
+background-image:url('./assets/success.png');
 }
 .warning {
 color: #9F6000;
 background-color: #FEEFB3;
-background-image: url('../assets/warning.png');
+background-image: url('./assets/warning.png');
 }
 .error {
 color: #D8000C;
 background-color: #FFBABA;
-background-image: url('../assets/error.png');
+background-image: url('./assets/error.png');
 }
