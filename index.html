@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Conway's Game of Life</title>
+
+  <link rel="stylesheet" type="text/css" href="style.css">    
+
+</head>
+<body>
+  <h1>Playing with HTML5/CSS</h1>
+  <blockquote cite="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">
+    The Game of Life, also known simply as Life, is a cellular automaton devised by the British mathematician John Horton Conway in 1970.
+    <cite><a title="wikipedia article" href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">-Wikipedia</a></cite>
+  </blockquote>
+
+  <br>
+  <hr>
+  <div class="left">
+    <button class="btn" id="savebtn">Save to..</button>
+    <button class="btn" id="loadbtn">Load from..</button>
+  </div>
+  <br>
+  <div id="wrapper">
+    <br>
+    <div id="gridsetup">  
+      <span id="grid_err_msg">Hidden Message</span>  
+      <br>  
+      <label for="grid_size">Grid width:</label>
+      <input id="grid_size" type="number" min="6" max="100" step="1" value ="24"/>
+      <button class="xbutton" id="runbtn">Run</button>
+      <button class="xbutton" id="stepbtn">Next step</button>
+      <button class="xbutton" id="clearbtn">Clear</button>
+
+    </div>
+    <h3>Alive: 
+      <div class="numberCircle" id="numAlive">1</div>
+      <span style="padding-left: 20px;" >Step: 
+      <div class="numberCircle" id="currGen">1</div>
+      </span>
+    </h3>    
+    <div class="info">Info message</div>
+    <div class="success">This is success message!</div>
+    <div class="warning">Warning message!</div>
+    <table id="grid"></table>
+    <br>
+  </div>
+
+  <script>
+    console.log("Here is index.html")
+    console.log("Chrome version:",process.versions.chrome);
+    console.log("Electron version:",process.versions.electron)
+
+    //open links externally by default
+    require('./scripts/ex-links.js')   
+    require('./scripts/game_of_life.js')
+    
+/*   
+    require('./scripts/life_game.js')
+    require('./scripts/life_view.js')    
+*/    
+  </script>
+
+</body>
+</html>
