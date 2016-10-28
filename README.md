@@ -19,10 +19,10 @@ I wrote this as an exercise inspired by an excellent tutorial by Lea Verou [Play
 
 ## Install and Run
 This is a very basic Electron application. 
-So, just run it by 'electron .' or 'npm start'
+So, just run it by `electron .` or `npm start`
 
 If you are new to Electron, please read [Quick Start](https://github.com/electron/electron/blob/master/docs/tutorial/quick-start.md)
 
 ## License
 
-MIT License
+[MIT](LICENSE)
