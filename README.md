@@ -4,7 +4,9 @@ Conway's Game of Life using Electron framework
 This is a simple application showing various aspects of writing 
 desktop apps using Electron/HTML5/CSS/NodeJS/Javascript.
 
-<img src='gof-demo.png' width='500px' />
+###Screen capture:
+
+<img src='gof-demo.png' width='600px' />
 
 ## Motivation
 I wrote this as an exercise.
