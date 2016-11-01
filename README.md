@@ -23,6 +23,19 @@ So, just run it by `electron .` or `npm start`
 
 If you are new to Electron, please read [Quick Start](https://github.com/electron/electron/blob/master/docs/tutorial/quick-start.md)
 
+## Distribution
+To package the app into a stand-alone for a distribution, I used [electron-packager](https://github.com/electron-userland/electron-packager)
+
+### For Windows
+In CMD, set `cd <my app folder>` 
+Note: First, I needed to install electron to my app folder. Like this: `npm install electron`
+Then:
+`electron-packager . --platform=win32 --arch=x64`
+
+It should create `game-of-life-win32-x64` folder containing game distribution i.e: 
+game-of-life.exe together with dll's and resources to run app as a stand-alone.
+
+
 ## License
 
 [MIT](LICENSE)
