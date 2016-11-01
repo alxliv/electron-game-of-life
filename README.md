@@ -6,16 +6,18 @@ desktop apps using Electron/HTML5/CSS/NodeJS/Javascript.
 
 ###Screen capture:
 
-<img src='gof-demo.png' width='600px' />
+<img src='gof-demo.png' width='740px' />
 
 ## Motivation
 I wrote this as an exercise inspired by an excellent tutorial by Lea Verou [Play by Play](https://www.pluralsight.com/courses/play-by-play-lea-verou).
 
 ## Features
-- Auto-run or step-by-step
-- Change grid size at any time
-- Save or load grid configuration (JSON text format)
-- Works on Windows, OSX and Linux
+* Auto-run or step-by-step
+* Back step history (up to 1000 steps)
+* Auto detection of still life and oscilllators
+* Change grid size at any time
+* Save and load grid configuration (JSON text format)
+* Works on Windows, OSX and Linux
 
 ## Install and Run
 This is a very basic Electron application. 

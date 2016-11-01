@@ -8,11 +8,99 @@ const app = electron.app
 // Module to create native browser window.
 const BrowserWindow = electron.BrowserWindow
 
+const Menu = electron.Menu
+
+let template = [
+{
+  label: 'File',
+  submenu: [
+  {
+    label: 'Load...',
+    click: function (item, focusedWindow) {
+      if (focusedWindow) {
+        const options = {
+            title: 'Load grid',
+            filters: [
+                { name: 'json', extensions: ['json'] }
+            ]
+        }
+        dialog.showOpenDialog(options, function (files) {
+            if (files) focusedWindow.webContents.send('selected-file', files)
+        })            
+      }
+    }
+  },
+  {
+    label: 'Save...',
+    click: function (item, focusedWindow) {
+      if (focusedWindow) 
+      {
+        const options = {
+            title: 'Save grid',
+            filters: [
+                { name: 'json', extensions: ['json'] }
+            ]
+        }
+        dialog.showSaveDialog(options, function (filename) {
+            focusedWindow.webContents.send('saved-file', filename)
+        })
+      }
+    }
+  }
+  ]
+},
+{
+  label: 'View',
+  submenu: [
+  {
+    label: 'Open dev tools',
+    click: function (item, focusedWindow) {
+      if (focusedWindow) {
+        focusedWindow.webContents.openDevTools();        
+      }
+    }
+  },
+  {
+    label: 'Reload',
+    click: function (item, focusedWindow) {
+      if (focusedWindow)
+        focusedWindow.reload();
+    }
+  },
+  { 
+    type: 'separator'
+  },
+  {
+    label: 'Zoom In',
+    role: 'zoomin'
+  },
+  {
+    label: 'Zoom Out',
+    role: 'zoomout'
+  },  
+  /*
+  {
+    label: 'ZOOM',
+    click: function (item,focusedWindow) {
+      console.log('ZOOM clicked!');
+      if (focusedWindow) {
+        console.log('sending zoom');
+        focusedWindow.webContents.send('zoom',75);
+      }
+    }
+  }
+  */
+]
+}]
+
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 
 function createWindow () {
+  const menu = Menu.buildFromTemplate(template)
+  Menu.setApplicationMenu(menu)
+
   // Create the browser window.
   mainWindow = new BrowserWindow({width: 1000, height: 1200})
 
@@ -22,7 +110,7 @@ function createWindow () {
   mainWindow.loadURL(url)
 
   // Open the DevTools.
-//  mainWindow.webContents.openDevTools()
+  // mainWindow.webContents.openDevTools()
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {

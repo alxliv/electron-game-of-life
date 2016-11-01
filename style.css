@@ -8,12 +8,6 @@ body {
 	background-color: beige;
 }
 
-.right{dislpay:inline; float:right}
-.right button {margin-right:6px}
-
-.left{dislpay:inline; float:left}
-.left button {margin-left:6px}
-
 /*
 thanks to http://css3buttongenerator.com/
 */
@@ -68,8 +62,8 @@ thanks to http://css3buttongenerator.com/
     height: 26px;
     padding: 4px;
     margin-top: 5px;
-    background: seashell;
-    color: #666;    
+    background: white;
+    color: darkgreen;    
     font: 24px Arial, sans-serif;
 }
 

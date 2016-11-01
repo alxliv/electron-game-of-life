@@ -1,9 +1,15 @@
 "use strict";
 const ipc = require('electron').ipcRenderer
+const {webFrame} = require('electron');
 
-// helper:
+// helpers:
 function $(selector,container) {
     return (container || document).querySelector(selector);
+}
+
+// Note: Only clones 2D arrays
+function cloneArray(arr) {
+    return arr.slice().map(function(row) { return row.slice(); });  
 }
 
 function PopMessage() {
@@ -49,6 +55,122 @@ function PopMessage() {
     }
 
 }
+
+var createRingBuffer = function(cap) {
+    var validItems=0, first=0, last=0;
+    var capacity = cap;
+    var buffer=[];
+
+    return {
+        isEmpty : function() {
+            return first==last;
+        },
+        push : function(item) {
+            last = (last + 1) % capacity;
+            if (last==first)            
+                first = (first+1) % capacity;
+            buffer[last]=item;
+        },
+        pop : function() {
+            if (this.isEmpty())
+                return undefined;
+            var item = buffer[last];
+            last = last - 1;
+            if (last<0)
+                last = capacity-1;
+            return item;
+        },
+        peek: function() {
+            return this.isEmpty()?undefined:buffer[last];
+        },
+        clear: function() {
+            last=first;
+        },   
+        findEqualBack(it) {
+            var i=last;
+            var n=0;
+            while(i!=first) {
+                n++;                
+                if (buffer[i].isEqual(it)) 
+                    return n;
+                i = (i>0)?i-1:capacity-1;               
+            }
+            return 0;
+        },      
+        toString: function() {
+            var i = first; 
+            var str = "";
+            if (this.isEmpty())
+                return 'empty';
+            while (i!=last) {
+                i = (i+1) % capacity;
+                str += ' '+ buffer[i] + ','
+            }
+            return str;    
+        }
+    }
+
+}
+
+function BoardSnap(board,step) {
+    var _step;
+    var _board;
+    var alive;   
+    var hash; 
+
+    _step = step;
+    _board = board;
+
+    alive = calcAlive();
+    hash = alive;
+
+    function calcAlive() {
+        let w = _board[0].length;
+        let h = _board.length;
+        var sum = 0;
+        for (var y=0; y<h; y++) 
+        {
+            for (var x=0; x<w; x++)
+            {
+                if (board[y][x])
+                    sum++;
+            }
+        }
+        return sum;
+    }
+
+    this.isEqual = function(other) {
+        if (hash!=other.getHash())
+            return false;
+        var otherBoard = other.getBoard();
+        if (_board.length != otherBoard.length)
+            return false;
+        if (_board[0].length != otherBoard[0].length)
+            return false;
+        let w = _board[0].length;
+        let h = _board.length;
+        for (var y=0; y<h; y++) {
+            for (var x=0; x<w; x++) {
+                if (board[y][x] != otherBoard[y][x]) 
+                    return false;                
+            }
+        }
+        return true;
+    }
+
+    this.getBoard = function() {
+        return _board;
+    }
+    this.getStep = function() {
+        return _step;
+    }
+    this.getAlive = function() {
+        return alive;
+    }
+    this.getHash = function() {
+        return hash;
+    }
+} 
 
 function GameLogic() {
 
@@ -151,17 +273,21 @@ function GameView() {
     var popMsg = new PopMessage();    
 	var checkboxes=[];
 	var gridSize = $('#grid_size').value;
-	var autoplay = false;
+	var auto_play = false;
 	var currGen=0;
     var isDirty=true;
     var currBoard=[];
     createGrid(gridSize);
     setInfo(0,currGen);
     var timer=0;
+    var nextSnap=0;
+    var boardStack = createRingBuffer(1000);
 
-    popMsg.show('Welcome to the Game of Life','.info', 2000, function() {
-        popMsg.show('Load from file or create by clicking on the grid','.info')        
-    });
+    function stdMessage() {
+        popMsg.show('Create by clicking on the grid or load from a file','.info');
+    }
+
+    popMsg.show('Welcome to the Game of Life','.info', 2000, stdMessage);
 
     $('#runbtn').addEventListener('click',function(e) {
         onRun();            
@@ -172,9 +298,15 @@ function GameView() {
         onNext();
     });
 
+    $('#backbtn').addEventListener('click',function(e) {
+        stopAutoRun();
+        onBack();
+    });
+
     $('#clearbtn').addEventListener('click',function() {
         stopAutoRun();        
         onClear();
+        stdMessage();
     });
 
     $('#grid_size').addEventListener('change',function(){
@@ -186,12 +318,9 @@ function GameView() {
     $('#grid').addEventListener('change',function(evt) {        
         if (evt.target.nodeName.toLowerCase()=='input') {
             isDirty=true;
-            stopAutoRun();            
+            stopAutoRun(); 
+            nextSnap=0;
         }
-    });
-
-    $('#savebtn').addEventListener('click',function(e) {
-        ipc.send('save-dialog')
     });
 
     ipc.on('saved-file', function (event, path) {
@@ -200,7 +329,7 @@ function GameView() {
             saveToFile(path);
         }
     })
-
+    
     function saveToFile(path) {
         var fs = require('fs');
         var arr = JSON.stringify(getBoard());
@@ -214,10 +343,6 @@ function GameView() {
         });             
     }
 
-    $('#loadbtn').addEventListener('click',function(e) {
-        stopAutoRun();        
-        ipc.send('open-file-dialog');
-    });
     ipc.on('selected-file', function (event, path) {
         if (path && path.length==1) {
             console.log('Path to load: ',path[0]);
@@ -243,6 +368,8 @@ function GameView() {
             onSizeChange(arr.length);
             currGen=0;
             setInfo(0,currGen);
+            nextSnap=0;
+            boardStack.clear();
             $('#grid_size').value=arr.length;
             popMsg.show(path+' loaded OK','.success',3000);
         })
@@ -275,6 +402,7 @@ function GameView() {
 
     function stopAutoRun()
     {
+        auto_play=false;
         if (timer)
             clearTimeout(timer);
         timer=0;
@@ -378,23 +506,97 @@ function GameView() {
         $('#currGen').innerHTML = gen;        
     }
 
+    function isEmpty(board) {
+        var w = board[0].length;
+        var h = board.length;
+        for(let y = 0; y < w; y++) 
+        {
+            for(let x=0; x < h; x++) 
+            {
+                if (board[y][x])
+                    return false;
+            }
+        }
+        return true;
+    }
+
     function onNext() {
-        currBoard = game.next(getBoard());
+        var b = getBoard();
+        if (isEmpty(b)) {
+            stopAutoRun();
+            popMsg.show('Board is empty','.warning',3000,stdMessage);  
+            return;          
+        }
+
+        if (boardStack.isEmpty()) {
+            boardStack.push(new BoardSnap(b,0));            
+        }
+        else {
+            if (nextSnap)
+                boardStack.push(nextSnap);            
+            else                
+                boardStack.push(new BoardSnap(b,0));            
+        }
+
+        nextSnap=0;
+        currBoard = game.next(b);
         updateGrid(currBoard);
         currGen++;
-        setInfo(game.getNumAlive(),currGen);
+        var num_alive = game.getNumAlive();
+        setInfo(num_alive,currGen);
+        if (num_alive==0)
+        {
+            stopAutoRun();
+            popMsg.show('Game over: all cells are dead','.info');
+            return;
+        }
+
+        nextSnap = new BoardSnap(currBoard,currGen);
+        var nperiod = boardStack.findEqualBack(nextSnap);
+        if (nperiod>0) {
+            stopAutoRun();
+            if (nperiod==1)
+                popMsg.show('Game over: static pattern (still life)','.info');            
+            else    
+                popMsg.show('Game over: static pattern - period of '+nperiod+' generations detected','.info');            
+        }
+    }
+
+    function onBack() {
+        if (boardStack.isEmpty())
+        {
+            console.log('board stack is empty!');
+            return;
+        }
+        var nb = boardStack.pop();
+        currBoard = nb.getBoard();
+        if (currBoard.length==gridSize)
+            updateGrid(currBoard);
+        else
+            onSizeChange(currBoard.length);                
+        currGen = nb.getStep();
+        nextSnap=0;
+        setInfo(nb.getAlive(),currGen);        
     }
 
     function onRun() {
         if ($('#runbtn').innerHTML=='Run') {
-            $('#runbtn').innerHTML='Stop';            
+            $('#runbtn').innerHTML='Stop'; 
+            auto_play=true; 
+            popMsg.show("Running..",".info");          
         }
         else {
             stopAutoRun();
+            popMsg.show("Stopped.",".info");               
             return;            
         }
     
         (function autoPlay() {
+            if (!auto_play)
+            {
+                clearTimeout(timer);
+                return;
+            }
             onNext();
             timer = setTimeout(autoPlay,500);
         })();
@@ -402,6 +604,7 @@ function GameView() {
 
     function onClear() {        
         currGen = 0;
+        boardStack.clear();
         currBoard = getBoard();
         var size = gridSize;
         for(let y = 0; y < size; y++) {
