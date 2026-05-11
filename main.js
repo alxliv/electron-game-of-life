@@ -1,170 +1,146 @@
 const path = require('path')
-const electron = require('electron')
-const ipc = require('electron').ipcMain
-const dialog = require('electron').dialog
+const fs = require('fs/promises')
+const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron')
 
-// Module to control application life.
-const app = electron.app
-// Module to create native browser window.
-const BrowserWindow = electron.BrowserWindow
-
-const Menu = electron.Menu
-
-let template = [
-{
-  label: 'File',
-  submenu: [
+const template = [
   {
-    label: 'Load...',
-    click: function (item, focusedWindow) {
-      if (focusedWindow) {
-        const options = {
-            title: 'Load grid',
-            filters: [
-                { name: 'json', extensions: ['json'] }
-            ]
-        }
-        dialog.showOpenDialog(options, function (files) {
-            if (files) focusedWindow.webContents.send('selected-file', files)
-        })            
-      }
-    }
-  },
-  {
-    label: 'Save...',
-    click: function (item, focusedWindow) {
-      if (focusedWindow) 
+    label: 'File',
+    submenu: [
       {
-        const options = {
-            title: 'Save grid',
-            filters: [
-                { name: 'json', extensions: ['json'] }
-            ]
+        label: 'Load...',
+        click: async (item, focusedWindow) => {
+          if (!focusedWindow) return
+          const result = await dialog.showOpenDialog(focusedWindow, {
+            title: 'Load grid',
+            properties: ['openFile'],
+            filters: [{ name: 'json', extensions: ['json'] }]
+          })
+          if (!result.canceled && result.filePaths.length > 0) {
+            focusedWindow.webContents.send('selected-file', result.filePaths)
+          }
         }
-        dialog.showSaveDialog(options, function (filename) {
-            focusedWindow.webContents.send('saved-file', filename)
-        })
+      },
+      {
+        label: 'Save...',
+        click: async (item, focusedWindow) => {
+          if (!focusedWindow) return
+          const result = await dialog.showSaveDialog(focusedWindow, {
+            title: 'Save grid',
+            filters: [{ name: 'json', extensions: ['json'] }]
+          })
+          if (!result.canceled && result.filePath) {
+            focusedWindow.webContents.send('saved-file', result.filePath)
+          }
+        }
       }
-    }
+    ]
+  },
+  {
+    label: 'View',
+    submenu: [
+      {
+        label: 'Open dev tools',
+        click: (item, focusedWindow) => {
+          if (focusedWindow) focusedWindow.webContents.openDevTools()
+        }
+      },
+      {
+        label: 'Reload',
+        click: (item, focusedWindow) => {
+          if (focusedWindow) focusedWindow.reload()
+        }
+      },
+      { type: 'separator' },
+      { label: 'Zoom In', role: 'zoomIn' },
+      { label: 'Zoom Out', role: 'zoomOut' }
+    ]
   }
-  ]
-},
-{
-  label: 'View',
-  submenu: [
-  {
-    label: 'Open dev tools',
-    click: function (item, focusedWindow) {
-      if (focusedWindow) {
-        focusedWindow.webContents.openDevTools();        
-      }
-    }
-  },
-  {
-    label: 'Reload',
-    click: function (item, focusedWindow) {
-      if (focusedWindow)
-        focusedWindow.reload();
-    }
-  },
-  { 
-    type: 'separator'
-  },
-  {
-    label: 'Zoom In',
-    role: 'zoomin'
-  },
-  {
-    label: 'Zoom Out',
-    role: 'zoomout'
-  },  
-  /*
-  {
-    label: 'ZOOM',
-    click: function (item,focusedWindow) {
-      console.log('ZOOM clicked!');
-      if (focusedWindow) {
-        console.log('sending zoom');
-        focusedWindow.webContents.send('zoom',75);
-      }
-    }
-  }
-  */
 ]
-}]
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
 let mainWindow
 
 function createWindow () {
   const menu = Menu.buildFromTemplate(template)
   Menu.setApplicationMenu(menu)
 
-  // Create the browser window.
-  mainWindow = new BrowserWindow({width: 1000, height: 1200})
+  mainWindow = new BrowserWindow({
+    width: 1000,
+    height: 1200,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true,
+      allowRunningInsecureContent: false,
+      experimentalFeatures: false
+    }
+  })
 
-  // and load the index.html of the app.
-  let url = path.join('file://',__dirname,'index.html')
-  console.log('index file at: ',url)
-  mainWindow.loadURL(url)
+  mainWindow.loadFile('index.html')
 
-  // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    shell.openExternal(url)
+    return { action: 'deny' }
+  })
 
-  // Emitted when the window is closed.
-  mainWindow.on('closed', function () {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null
-})
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const target = new URL(url)
+    if (target.protocol !== 'file:') event.preventDefault()
+  })
+
+  mainWindow.on('closed', () => { mainWindow = null })
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.on('ready', createWindow)
 
-// Quit when all windows are closed.
-app.on('window-all-closed', function () {
-  // On OS X it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
-    app.quit()
-}
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit()
 })
 
-app.on('activate', function () {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (mainWindow === null) {
-    createWindow()
-}
+app.on('activate', () => {
+  if (mainWindow === null) createWindow()
 })
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
-ipc.on('save-dialog', function (event) {
-    const options = {
-        title: 'Save board',
-        filters: [
-            { name: 'json', extensions: ['json'] }
-        ]
-    }
-    dialog.showSaveDialog(options, function (filename) {
-        event.sender.send('saved-file', filename)
-    })
+app.on('web-contents-created', (event, contents) => {
+  contents.on('will-attach-webview', (e) => e.preventDefault())
 })
 
-ipc.on('open-file-dialog', function (event) {
-    const options = {
-        title: 'Load board',
-        filters: [
-            { name: 'json', extensions: ['json'] }
-        ]
-    }
-    dialog.showOpenDialog(options, function (files) {
-        if (files) event.sender.send('selected-file', files)
-    })
+ipcMain.handle('show-save-dialog', async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  const result = await dialog.showSaveDialog(win, {
+    title: 'Save board',
+    filters: [{ name: 'json', extensions: ['json'] }]
+  })
+  return result.canceled ? null : result.filePath
+})
+
+ipcMain.handle('show-open-dialog', async (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  const result = await dialog.showOpenDialog(win, {
+    title: 'Load board',
+    properties: ['openFile'],
+    filters: [{ name: 'json', extensions: ['json'] }]
+  })
+  return (result.canceled || result.filePaths.length === 0) ? null : result.filePaths[0]
+})
+
+ipcMain.handle('save-board', async (event, filePath, data) => {
+  if (typeof filePath !== 'string' || typeof data !== 'string') {
+    throw new Error('Invalid arguments')
+  }
+  await fs.writeFile(filePath, data, 'utf8')
+  return true
+})
+
+ipcMain.handle('load-board', async (event, filePath) => {
+  if (typeof filePath !== 'string') throw new Error('Invalid arguments')
+  return await fs.readFile(filePath, 'utf8')
+})
+
+ipcMain.handle('open-external', async (event, url) => {
+  if (typeof url !== 'string') return false
+  if (!/^https?:\/\//i.test(url)) return false
+  await shell.openExternal(url)
+  return true
 })

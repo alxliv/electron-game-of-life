@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-ancestors 'none';">
   <title>Conway's Game of Life</title>
 
-  <link rel="stylesheet" type="text/css" href="style.css">    
+  <link rel="stylesheet" type="text/css" href="style.css">
 
 </head>
 <body>
@@ -14,7 +16,7 @@
   </blockquote>
   <hr>
   <div id="wrapper">
-    <div id="gridsetup">  
+    <div id="gridsetup">
       <label for="grid_size">Grid width:</label>
       <input id="grid_size" type="number" min="6" max="100" step="1" value ="24"/>
       <button class="xbutton" id="runbtn">Run</button>
@@ -23,30 +25,21 @@
       <button class="xbutton" id="clearbtn">Clear</button>
 
     </div>
-    <h3>Alive: 
+    <h3>Alive:
       <div class="numberCircle" id="numAlive">1</div>
-      <span style="padding-left: 20px;" >Step: 
+      <span style="padding-left: 20px;" >Step:
       <div class="numberCircle" id="currGen">1</div>
       </span>
-    </h3>    
+    </h3>
     <div class="info">Info message</div>
     <div class="success">This is success message!</div>
     <div class="warning">Warning message!</div>
     <table id="grid"></table>
     <br>
-    <address>About this program: <a href="https://github.com/alxliv/electron-game-of-life">GitHub</a></address>    
+    <address>About this program: <a href="https://github.com/alxliv/electron-game-of-life">GitHub</a></address>
   </div>
-  
-  <script>
-    console.log("Here is index.html")
-    console.log("Chrome version:",process.versions.chrome);
-    console.log("Electron version:",process.versions.electron)
 
-    // open links externally by default
-    require('./scripts/ex-links.js')  
-    // actual game code
-    require('./scripts/game_of_life.js')    
-  </script>
-
+  <script src="scripts/ex-links.js"></script>
+  <script src="scripts/game_of_life.js"></script>
 </body>
 </html>

@@ -1,6 +1,5 @@
 "use strict";
-const ipc = require('electron').ipcRenderer
-const {webFrame} = require('electron');
+const api = window.electronAPI;
 
 // helpers:
 function $(selector,container) {
@@ -323,56 +322,57 @@ function GameView() {
         }
     });
 
-    ipc.on('saved-file', function (event, path) {
+    api.onSavedFile(function (path) {
         if (path) {
-            console.log('Path to save: ',path);
+            console.log('Path to save: ', path);
             saveToFile(path);
         }
-    })
-    
+    });
+
     function saveToFile(path) {
-        var fs = require('fs');
         var arr = JSON.stringify(getBoard());
-        fs.writeFile(path, arr, function(err) {
-            if(err) {
-                popMsg.show('Error '+err,'.warning',5000);
-                return console.log(err);
-            }
-            popMsg.show(path+' written OK','.success',3000);
+        api.saveBoard(path, arr).then(function () {
+            popMsg.show(path + ' written OK', '.success', 3000);
             console.log("The file was saved!");
-        });             
+        }).catch(function (err) {
+            popMsg.show('Error ' + err.message, '.warning', 5000);
+            console.log(err);
+        });
     }
 
-    ipc.on('selected-file', function (event, path) {
-        if (path && path.length==1) {
-            console.log('Path to load: ',path[0]);
-            loadFromFile(path[0]);
+    api.onSelectedFile(function (paths) {
+        if (paths && paths.length == 1) {
+            console.log('Path to load: ', paths[0]);
+            loadFromFile(paths[0]);
         }
-    })
+    });
 
     function loadFromFile(path) {
-        var fs = require('fs');        
-        fs.readFile(path,'utf8',function(err,data) {
-            if (err) {
-                popMsg.show('Read error: '+err,'.warning',5000);
-                return console.log(err);                    
+        api.loadBoard(path).then(function (data) {
+            var arr;
+            try {
+                arr = JSON.parse(data);
+            } catch (e) {
+                popMsg.show('Parse error: ' + e.message, '.warning', 5000);
+                return console.log(e);
             }
-            var arr = JSON.parse(data);
-            if (!arr)
-            {
-                popMsg.show('Read error: '+err,'.warning',5000);
-                return console.log(err);                                        
+            if (!Array.isArray(arr) || !Array.isArray(arr[0])) {
+                popMsg.show('Invalid file format', '.warning', 5000);
+                return;
             }
             currBoard = arr;
-            isDirty=false;
+            isDirty = false;
             onSizeChange(arr.length);
-            currGen=0;
-            setInfo(0,currGen);
-            nextSnap=0;
+            currGen = 0;
+            setInfo(0, currGen);
+            nextSnap = 0;
             boardStack.clear();
-            $('#grid_size').value=arr.length;
-            popMsg.show(path+' loaded OK','.success',3000);
-        })
+            $('#grid_size').value = arr.length;
+            popMsg.show(path + ' loaded OK', '.success', 3000);
+        }).catch(function (err) {
+            popMsg.show('Read error: ' + err.message, '.warning', 5000);
+            console.log(err);
+        });
     }
 
     function findMinRect(table) {
